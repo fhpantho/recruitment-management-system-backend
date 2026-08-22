@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { supabase } from './config/supabase';
+import { supabase } from './config/supabase.js';
 
 const app = express();
 
@@ -11,23 +11,23 @@ app.get('/', (_req, res) => {
   res.send('The Server is running');
 });
 
-app.get('/test-db', async (_req, res) => {
-  const { error } = await supabase
-    .from('test_connection')
-    .select('*');
+// app.get('/test-db', async (_req, res) => {
+//   const { error } = await supabase
+//     .from('test_connection')
+//     .select('*');
 
-  if (error) {
-    return res.status(500).json({
-      connected: false,
-      error: error.message,
-    });
-  }
+//   if (error) {
+//     return res.status(500).json({
+//       connected: false,
+//       error: error.message,
+//     });
+//   }
 
-  res.json({
-    connected: true,
-    message: 'Supabase database connection is working',
-  });
-});
+//   res.json({
+//     connected: true,
+//     message: 'Supabase database connection is working',
+//   });
+// });
 
 const PORT = process.env.PORT || 5000;
 
