@@ -1,33 +1,35 @@
 import express from 'express';
 import cors from 'cors';
-import { supabase } from './config/supabase.js';
+import { authenticate } from './middleware/auth.middleware.js';
+import { requirePermission } from './middleware/permission.middleware.js';
+import authRoutes from './routes/auth.routes.js';
+import userRoutes from './routes/user.routes.js';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+
+app.get(
+  '/api/test/candidate-view',
+  authenticate,
+  requirePermission('candidate.view'),
+  (_req, res) => {
+    res.json({
+      success: true,
+      message: 'You have candidate.view permission',
+    });
+  }
+);
+
 app.get('/', (_req, res) => {
   res.send('The Server is running');
 });
 
-// app.get('/test-db', async (_req, res) => {
-//   const { error } = await supabase
-//     .from('test_connection')
-//     .select('*');
 
-//   if (error) {
-//     return res.status(500).json({
-//       connected: false,
-//       error: error.message,
-//     });
-//   }
-
-//   res.json({
-//     connected: true,
-//     message: 'Supabase database connection is working',
-//   });
-// });
 
 const PORT = process.env.PORT || 5000;
 

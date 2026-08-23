@@ -1,6 +1,8 @@
 import { Response, NextFunction } from 'express';
+import {
+  AuthenticatedRequest,
+} from './auth.middleware.js';
 import { supabase } from '../config/supabase.js';
-import { AuthenticatedRequest } from './auth.middleware.js';
 
 export const requirePermission = (permissionCode: string) => {
   return async (
@@ -9,17 +11,20 @@ export const requirePermission = (permissionCode: string) => {
     next: NextFunction
   ) => {
     try {
-      if (!req.user?.id) {
+      if (!req.user) {
         return res.status(401).json({
           success: false,
           message: 'Authentication required',
         });
       }
 
-      const { data, error } = await supabase.rpc('has_permission', {
-        p_user_id: req.user.id,
-        p_permission_code: permissionCode,
-      });
+      const { data, error } = await supabase.rpc(
+        'has_permission',
+        {
+          p_user_id: req.user.id,
+          p_permission_code: permissionCode,
+        }
+      );
 
       if (error) {
         console.error('Permission check error:', error);
@@ -30,11 +35,10 @@ export const requirePermission = (permissionCode: string) => {
         });
       }
 
-      if (data !== true) {
+      if (!data) {
         return res.status(403).json({
           success: false,
-          message: 'You do not have permission to perform this action',
-          permission: permissionCode,
+          message: `Permission denied: ${permissionCode}`,
         });
       }
 
@@ -44,7 +48,7 @@ export const requirePermission = (permissionCode: string) => {
 
       return res.status(500).json({
         success: false,
-        message: 'Authorization failed',
+        message: 'Permission verification failed',
       });
     }
   };

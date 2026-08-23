@@ -4,7 +4,9 @@ import { supabase } from '../config/supabase.js';
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
-    email?: string;
+    email: string;
+    full_name: string;
+    status: boolean;
   };
 }
 
@@ -19,28 +21,45 @@ export const authenticate = async (
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
-        message: 'Authentication required',
+        message: 'Authentication token is required',
       });
     }
 
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.substring(7);
 
     const {
-      data: { user },
-      error,
+      data: { user: authUser },
+      error: authError,
     } = await supabase.auth.getUser(token);
 
-    if (error || !user) {
+    if (authError || !authUser) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid or expired token',
+        message: 'Invalid or expired authentication token',
       });
     }
 
-    req.user = {
-      id: user.id,
-      email: user.email,
-    };
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, email, full_name, status')
+      .eq('id', authUser.id)
+      .single();
+
+    if (userError || !user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User account not found',
+      });
+    }
+
+    if (!user.status) {
+      return res.status(403).json({
+        success: false,
+        message: 'User account is inactive',
+      });
+    }
+
+    req.user = user;
 
     next();
   } catch (error) {
