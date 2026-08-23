@@ -1,65 +1,59 @@
-import express from "express";
+import { Router } from "express";
 
 import {
-  getClientDemands,
-  getDemand,
-  createDemand,
-  updateDemand,
-  deleteDemand,
-} from "../controllers/demand.controller.js";
+  getCountries,
+  createCountry,
+  updateCountry,
+  deleteCountry,
+} from "../controllers/country.controller.js";
 
 import { authenticate } from "../middleware/auth.middleware.js";
+import { requirePermission } from "../middleware/permission.middleware.js";
 
-const router = express.Router();
+const router = Router();
 
 // ==========================================
-// GET ALL DEMANDS FOR CLIENT
+// GET ALL COUNTRIES
 // ==========================================
 
 router.get(
-  "/client/:clientId",
+  "/",
   authenticate,
-  getClientDemands
+  requirePermission("country.view"),
+  getCountries
 );
 
 // ==========================================
-// CREATE DEMAND FOR CLIENT
+// CREATE COUNTRY
 // ==========================================
 
 router.post(
-  "/client/:clientId",
+  "/",
   authenticate,
-  createDemand
+  requirePermission("country.create"),
+  createCountry
 );
 
 // ==========================================
-// GET SINGLE DEMAND
-// ==========================================
-
-router.get(
-  "/:id",
-  authenticate,
-  getDemand
-);
-
-// ==========================================
-// UPDATE DEMAND
+// UPDATE COUNTRY
 // ==========================================
 
 router.put(
   "/:id",
   authenticate,
-  updateDemand
+  requirePermission("country.update"),
+  updateCountry
 );
 
 // ==========================================
-// DELETE DEMAND
+// DELETE COUNTRY
 // ==========================================
 
 router.delete(
   "/:id",
   authenticate,
-  deleteDemand
+  requirePermission("country.delete"),
+  deleteCountry
 );
 
 export default router;
